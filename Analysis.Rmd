@@ -1,0 +1,70 @@
+---
+title: "ELM Twitter Analysis"
+author: "DanLarson"
+date: "June 1, 2016"
+output: html_document
+---
+
+
+
+```{r}
+#connect all libraries
+library(twitteR)
+library(ROAuth)
+library(plyr)
+library(dplyr)
+library(stringr)
+library(ggplot2)
+library(tm)
+library(wordcloud)
+library(RColorBrewer)
+require(RCurl)
+
+data <- read.csv("ELMdata.csv",header=T)
+```
+
+
+
+```{r, echo=FALSE,}
+
+sdate <- tbl_df(as.data.frame(seq.Date(as.Date("2013/05/02"),as.Date("2016/06/01"),by = "day")))
+names(sdate) <- 'day'
+data$day <- as.Date(data$date,format="%Y-%m-%d")
+
+day <- tbl_df(data)%>%group_by(day)%>%summarise(tweets=n(),fav = mean(as.numeric(favoritecount),na.rm=T),retweet=mean(as.numeric(retweetcount)))
+day <- left_join(sdate,day,by='day')
+
+day[is.na(day)] <- 0
+
+ggplot(data=day,aes(x=day)) +
+  geom_line(aes(y=tweets),size=1,colour = "#7fbf7f") +
+  geom_line(aes(y=mean(as.numeric(tweets))),size=1.5,colour="#faaca7")+
+  theme_bw() +
+  # Set the entire chart region to a light gray color
+  theme(panel.background=element_rect(fill="#F0F0F0")) +
+  theme(plot.background=element_rect(fill="#F0F0F0")) +
+  theme(panel.border=element_rect(colour="#F0F0F0")) +
+  # Format the grid
+  theme(panel.grid.major=element_line(colour="#D0D0D0",size=.75)) +
+  theme(axis.ticks=element_blank()) +
+  # Dispose of the legend
+  theme(legend.position="none") +
+  # Set title and axis labels, and format these and tick marks
+  ggtitle("Early Light Media Tweets per Day") +
+  theme(plot.title=element_text(face="bold",hjust=0,vjust=2,colour="#3C3C3C",size=20)) +
+  ylab("Frequency") +
+  xlab("Date") +
+  theme(axis.text.x=element_text(size=11,colour="#535353",face="bold")) +
+  theme(axis.text.y=element_text(size=11,colour="#535353",face="bold")) +
+  theme(axis.title.y=element_text(size=11,colour="#535353",face="bold",vjust=1.5)) +
+  theme(axis.title.x=element_text(size=11,colour="#535353",face="bold",vjust=-.5)) +
+  # Big bold line at y=0
+  geom_hline(yintercept=0,size=1.2,colour="#535353") +
+  # Plot margins and finally line annotations
+  theme(plot.margin = unit(c(1, 1, .5, .7), "cm")) 
+#annotate("text",x=as.Date("2016-05-12"),y=500,label="$300 Goal",colour="#008489") 
+#annotate("text",x=25,y=7.5,label="Line 2",colour="#00bdc4")
+
+
+```
+
